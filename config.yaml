@@ -1,0 +1,5 @@
+# 以下为配置文件形式，如果不想用的话就在使用命令行参数-token=xxx -httpProxyUrl=xxx
+# openai的API keys，地址为 https://platform.openai.com/account/api-keys 
+#token: xxx
+# 本地代理的地址,目前只支持clash，墙外的话话不用动，大陆默认没改的话打开即可不用修改
+#httpProxyUrl: http://127.0.0.1:7890
