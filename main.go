@@ -101,7 +101,7 @@ func chat(userCOnfig UserConfig) {
 		},
 	}
 
-	fmt.Println("Please choose mode:0 is single-line text,1 is multi-line text.Default is 0.By mode 1,Question is stopped by string '//end'")
+	fmt.Println("Please choose mode: 0 OR 1.\r\n0 is single-line text,1 is multi-line text.\r\nNote: Default is 0. And in mode 1,Question is committed by string '//end'")
 	// 读取用户输入并交互
 	mode := 0
 	inputReader := bufio.NewReader(os.Stdin)
