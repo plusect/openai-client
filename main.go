@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/common-nighthawk/go-figure"
@@ -90,7 +89,7 @@ func chat(userCOnfig UserConfig) {
 	}
 	config.HTTPClient = &http.Client{
 		Transport: proxyTransport,
-		Timeout:   time.Second * 30,
+		Timeout:   time.Second * 120,
 	}
 	client := openai.NewClientWithConfig(config)
 
@@ -102,16 +101,41 @@ func chat(userCOnfig UserConfig) {
 		},
 	}
 
+	fmt.Println("Please choose mode:0 is single-line text,1 is multi-line text.Default is 0.By mode 1,Question is stopped by string '//end'")
+	// 读取用户输入并交互
+	mode := 0
+	inputReader := bufio.NewReader(os.Stdin)
+	modeInput, err := inputReader.ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if modeInput == "1\r\n" {
+		mode = 1
+	}
+
 	for {
 		fmt.Print("マスター: ")
 
 		// 读取用户输入并交互
 		inputReader := bufio.NewReader(os.Stdin)
-		userInput, err := inputReader.ReadString('\n')
+		userInput := ""
+		var err error
 
-		if err != nil {
-			fmt.Println(err)
-			continue
+		for {
+			input, err := inputReader.ReadString('\n')
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if mode == 1 && input != "//end\r\n" {
+				userInput = "" + userInput + input
+			} else if mode == 1 && input == "//end\r\n" {
+				break
+			} else {
+				userInput = input
+				break
+			}
 		}
 
 		if userInput == "" || userInput == "\n" {
@@ -122,17 +146,17 @@ func chat(userCOnfig UserConfig) {
 			return
 		}
 
-		if strings.HasSuffix(userInput, "\\c\n") {
-			// 数组还原
-			messages = []openai.ChatCompletionMessage{
-				{
-					Role:    "system",
-					Content: "你是ChatGPT, OpenAI训练的大型语言模型, 请尽可能简洁地回答我的问题",
-				},
-			}
-			fmt.Println("会话已重置")
-			continue
-		}
+		// if strings.HasSuffix(userInput, "\\c\n") {
+		// 	// 数组还原
+		// 	messages = []openai.ChatCompletionMessage{
+		// 		{
+		// 			Role:    "system",
+		// 			Content: "你是ChatGPT, OpenAI训练的大型语言模型, 请尽可能简洁地回答我的问题",
+		// 		},
+		// 	}
+		// 	fmt.Println("会话已重置")
+		// 	continue
+		// }
 
 		messages = append(
 			messages, openai.ChatCompletionMessage{
@@ -141,24 +165,24 @@ func chat(userCOnfig UserConfig) {
 			},
 		)
 
-		if len(messages) > 4096 {
-			// 数组还原
-			messages = []openai.ChatCompletionMessage{
-				{
-					Role:    "system",
-					Content: "你是ChatGPT, OpenAI训练的大型语言模型, 请尽可能简洁地回答我的问题",
-				},
-			}
-			fmt.Println("会话已重置")
+		// if len(messages) > 4096 {
+		// 	// 数组还原
+		// 	messages = []openai.ChatCompletionMessage{
+		// 		{
+		// 			Role:    "system",
+		// 			Content: "你是ChatGPT, OpenAI训练的大型语言模型, 请尽可能简洁地回答我的问题",
+		// 		},
+		// 	}
+		// 	fmt.Println("会话已重置")
 
-			// 重新添加消息
-			messages = append(
-				messages, openai.ChatCompletionMessage{
-					Role:    "user",
-					Content: userInput,
-				},
-			)
-		}
+		// 	// 重新添加消息
+		// 	messages = append(
+		// 		messages, openai.ChatCompletionMessage{
+		// 			Role:    "user",
+		// 			Content: userInput,
+		// 		},
+		// 	)
+		// }
 
 		// 调用 ChatGPT API 接口生成回答
 		ctx := context.Background()
